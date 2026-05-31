@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
-const uri = 'mongodb+srv://greenleaf_dev_user:43bXacJ4atD65ek2@cluster0.niaur5h.mongodb.net/greenleaf-dev';
+require('dotenv').config();
+const uri = process.env.MONGO_URI;
 
 async function checkDb() {
   try {
