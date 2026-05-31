@@ -16,6 +16,31 @@ import GovSchemesDashboard from './pages/gov-schemes/GovSchemesDashboard';
 import ResearchAiDashboard from './pages/research-ai/ResearchAiDashboard';
 import NewsIntelDashboard from './pages/news-intel/NewsIntelDashboard';
 import LearningHubDashboard from './pages/learning-hub/LearningHubDashboard';
+import MandiNewsFeed from './pages/news-intel/MandiNewsFeed';
+import PolicyUpdates from './pages/news-intel/PolicyUpdates';
+import MarketImpactRatings from './pages/news-intel/MarketImpactRatings';
+
+import SchemeMatcher from './pages/gov-schemes/SchemeMatcher';
+import SubsidyTracker from './pages/gov-schemes/SubsidyTracker';
+import ApplicationCenter from './pages/gov-schemes/ApplicationCenter';
+import StateGrants from './pages/gov-schemes/StateGrants';
+import StateBudgetAllocation from './pages/gov-schemes/StateBudgetAllocation';
+
+import RagEngine from './pages/research-ai/RagEngine';
+import PathologySearch from './pages/research-ai/PathologySearch';
+import TranslationCenter from './pages/research-ai/TranslationCenter';
+import YieldPredictorModels from './pages/research-ai/YieldPredictorModels';
+import SoilMicrobiomeResearch from './pages/research-ai/SoilMicrobiomeResearch';
+
+import LectureHall from './pages/learning-hub/LectureHall';
+import KnowledgeBase from './pages/learning-hub/KnowledgeBase';
+import InteractiveQuizzes from './pages/learning-hub/InteractiveQuizzes';
+import ExpertWebinars from './pages/learning-hub/ExpertWebinars';
+import VirtualFarmTours from './pages/learning-hub/VirtualFarmTours';
+
+import AgriTechTrends from './pages/news-intel/AgriTechTrends';
+import CommodityExportTrends from './pages/news-intel/CommodityExportTrends';
+
 import * as LucideIcons from 'lucide-react';
 
 // ─── Commodity Market Intelligence Pages ─────────────────────────────────────
@@ -97,14 +122,35 @@ function DashboardSwitcher() {
     return <WeatherDashboard />;
   }
 
-  // ── Government Scheme Center (existing) ───────────────────────────────────
-  if (moduleId === 'gov-schemes') return <GovSchemesDashboard />;
+  // Government Scheme Center routing
+  if (moduleId === 'gov-schemes') {
+    if (subPath === 'matching') return <SchemeMatcher />;
+    if (subPath === 'subsidies') return <SubsidyTracker />;
+    if (subPath === 'applications') return <ApplicationCenter />;
+    if (subPath === 'state-grants') return <StateGrants />;
+    if (subPath === 'budget') return <StateBudgetAllocation />;
+    return <GovSchemesDashboard />;
+  }
 
-  // ── White Paper & Research AI (existing) ──────────────────────────────────
-  if (moduleId === 'research-ai') return <ResearchAiDashboard />;
+  // White Paper & Research AI routing
+  if (moduleId === 'research-ai') {
+    if (subPath === 'rag') return <RagEngine />;
+    if (subPath === 'pathology') return <PathologySearch />;
+    if (subPath === 'translate') return <TranslationCenter />;
+    if (subPath === 'models') return <YieldPredictorModels />;
+    if (subPath === 'microbiome') return <SoilMicrobiomeResearch />;
+    return <ResearchAiDashboard />;
+  }
 
-  // ── News Intelligence (existing) ──────────────────────────────────────────
-  if (moduleId === 'news-intel') return <NewsIntelDashboard />;
+  // News Intelligence routing
+  if (moduleId === 'news-intel') {
+    if (subPath === 'mandi') return <MandiNewsFeed />;
+    if (subPath === 'policies') return <PolicyUpdates />;
+    if (subPath === 'impact') return <MarketImpactRatings />;
+    if (subPath === 'agritech') return <AgriTechTrends />;
+    if (subPath === 'exports') return <CommodityExportTrends />;
+    return <NewsIntelDashboard />;
+  }
 
   // ── Marketplace (NEW) ─────────────────────────────────────────────────────
   if (moduleId === 'marketplace') {
@@ -118,8 +164,15 @@ function DashboardSwitcher() {
     return <MarketplaceDashboard />;
   }
 
-  // ── Learning Hub (existing) ───────────────────────────────────────────────
-  if (moduleId === 'learning-hub') return <LearningHubDashboard />;
+  // Learning Hub routing
+  if (moduleId === 'learning-hub') {
+    if (subPath === 'lectures') return <LectureHall />;
+    if (subPath === 'kb') return <KnowledgeBase />;
+    if (subPath === 'quizzes') return <InteractiveQuizzes />;
+    if (subPath === 'webinars') return <ExpertWebinars />;
+    if (subPath === 'tours') return <VirtualFarmTours />;
+    return <LearningHubDashboard />;
+  }
 
   const isDisease = moduleId === 'disease-detection';
 

@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import commodityRoutes from './routes/commodity.routes.js';
 import weatherRoutes from './routes/weather.routes.js';
 import marketplaceRoutes from './routes/marketplace.routes.js';
+import extendedRoutes from './routes/extended.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,6 +34,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api', commodityRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
+app.use('/api/extended', extendedRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {

@@ -1,167 +1,159 @@
-import React from "react";
-import {
-  FileText,
-  Award,
-  Landmark,
-  CircleDollarSign,
-  ArrowUpRight,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
-import bannerImg from "../../assets/images/Government Scheme Center.png";
+import React, { useState } from 'react';
+import { 
+  FileText, 
+  CheckCircle, 
+  AlertTriangle, 
+  ArrowRight, 
+  TrendingUp, 
+  Sparkles, 
+  Clock, 
+  HelpCircle 
+} from 'lucide-react';
 
-export default function GovSchemesDashboard() {
+export default function GovernmentSchemeCenter() {
+  // Mocking the user context state (Suresh Kumar, Farmer from Haryana)
+  const [userProfile, setUserProfile] = useState({
+    name: "Suresh Kumar",
+    role: "Farmer",
+    state: "Haryana"
+  });
+
+  // Top metric highlights matching image_a5bbc3.jpg
   const metrics = [
-    {
-      label: "Active Schemes",
-      value: "214",
-      sub: "Nationally matched",
-      color: "text-emerald-700 bg-emerald-50",
-    },
-    {
-      label: "Eligible Subsidies",
-      value: "8 Schemes",
-      sub: "High match score",
-      color: "text-[#31572c] bg-[#31572c]/10",
-    },
-    {
-      label: "Pending Claims",
-      value: "2",
-      sub: "Under verification",
-      color: "text-sky-700 bg-sky-50",
-    },
-    {
-      label: "Total Disbursed",
-      value: "₹45,000",
-      sub: "Platform verified",
-      color: "text-amber-700 bg-amber-50",
-    },
+    { label: "ACTIVE SCHEMES", value: "214", subtext: "NATIONALLY MATCHED", color: "text-emerald-700", bg: "bg-emerald-50" },
+    { label: "ELIGIBLE SUBSIDIES", value: "8 Schemes", subtext: "HIGH MATCH SCORE", color: "text-amber-700", bg: "bg-amber-50" },
+    { label: "PENDING CLAIMS", value: "2", subtext: "UNDER VERIFICATION", color: "text-blue-700", bg: "bg-blue-50" },
+    { label: "TOTAL DISBURSED", value: "₹45,000", subtext: "PLATFORM VERIFIED", color: "text-stone-700", bg: "bg-stone-100" }
   ];
 
-  const schemes = [
+  // Primary Data Array for the Eligibility Matrix
+  const [schemes, setSchemes] = useState([
     {
+      id: "pm-kisan",
       name: "PM-KISAN Samman Nidhi",
-      match: "100% Eligible",
-      payout: "₹6,000 / year",
+      eligibility: "100% Eligible",
+      benefit: "₹6,000 / year",
       status: "Active Disbursal",
+      actionType: "badge-success"
     },
     {
-      name: "Agricultural Machinery Subsidy",
-      match: "95% Eligible",
-      payout: "50% Off Tractor/Seeder",
+      id: "agri-machinery",
+      name: "Agricultural Machinery Subsidies",
+      eligibility: "95% Eligible",
+      benefit: "50% Off Tractor/Seeder",
       status: "Apply Now",
+      actionType: "button-primary"
     },
     {
+      id: "pmfby",
       name: "PM Fasal Bima Yojana (PMFBY)",
-      match: "92% Eligible",
-      payout: "Crop Insurance Guard",
+      eligibility: "92% Eligible",
+      benefit: "Crop Insurance Guard",
       status: "Active Cover",
+      actionType: "badge-success"
     },
     {
+      id: "pmksy",
       name: "Har Khet Ko Pani (PMKSY)",
-      match: "88% Eligible",
-      payout: "80% Tube-well Subsidy",
+      eligibility: "88% Eligible",
+      benefit: "80% Tube-well Subsidy",
       status: "Verified",
-    },
-  ];
+      actionType: "badge-neutral"
+    }
+  ]);
+
+  // Handle CTA button clicks
+  const handleActionClick = (schemeName, actionType) => {
+    if (actionType === 'button-primary') {
+      alert(`Redirecting to application portal for: ${schemeName}`);
+    } else {
+      alert(`Opening tracking dashboard details for: ${schemeName}`);
+    }
+  };
 
   return (
-    <div className="space-y-6 animate-fadeIn antialiased">
-      {/* Page Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-[#f4f7f4] to-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between">
-        <div className="relative z-10 w-full md:w-2/3">
+    <div className="p-6 bg-slate-50 min-h-screen text-slate-800">
+      
+      {/* 1. Header Hero Banner */}
+      <div className="mb-6 bg-white border border-slate-100 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between shadow-sm relative overflow-hidden">
+        <div className="flex items-start space-x-4 z-10">
+          <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl mt-1">
+            <FileText className="w-6 h-6" />
+          </div>
           <div>
-            <div className="flex items-center gap-2.5">
-              <FileText className="h-6.5 w-6.5 text-[#31572c]" />
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-950 flex items-center gap-3">
-                <span>Government Scheme Center</span>
-                <span className="text-gray-300 font-light text-xl">|</span>
-                <span className="text-[#31572c] font-bold text-sm md:text-base">
-                  सरकारी योजना केंद्र
-                </span>
-              </h1>
+            <div className="flex items-baseline space-x-3">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">Government Scheme Center</h1>
+              <span className="text-emerald-800 font-medium font-hindi text-lg">सरकारी योजना केंद्र</span>
             </div>
-            <p className="text-gray-500 text-[11px] md:text-xs font-medium mt-1.5">
-              Match localized eligibility indices with active central and state
-              agricultural welfare schemes.
+            <p className="text-sm text-slate-500 mt-1">
+              Match localized eligibility indices with active central and state agricultural welfare schemes.
             </p>
           </div>
         </div>
-        <div className="absolute right-0 top-0 bottom-0 w-full md:w-1/3 opacity-20 md:opacity-100">
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent z-10 hidden md:block" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent z-10 md:hidden" />
-          <img
-            src={bannerImg}
-            alt="Banner"
-            className="w-full h-full object-cover object-right"
-          />
+        
+        {/* Subtle decorative vector matching the illustration tone */}
+        <div className="absolute right-0 top-0 bottom-0 opacity-10 pointer-events-none hidden lg:block">
+          <div className="bg-emerald-800 w-48 h-full transform skew-x-12 translate-x-12" />
         </div>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((m, idx) => (
-          <div
-            key={idx}
-            className="bg-white p-4 rounded-2xl border border-gray-200/60 shadow-sm flex flex-col justify-between space-y-2 hover:shadow-md transition-shadow"
-          >
-            <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider block">
-              {m.label}
-            </span>
+      {/* 2. Stat Grid Summary Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {metrics.map((metric, idx) => (
+          <div key={idx} className="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
             <div>
-              <h4 className="text-gray-900 text-xl font-black tracking-tight">
-                {m.value}
-              </h4>
-              <span
-                className={`inline-block text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md mt-1 ${m.color}`}
-              >
-                {m.sub}
-              </span>
+              <span className="text-xs font-bold text-slate-400 tracking-wider block mb-1">{metric.label}</span>
+              <span className="text-2xl font-extrabold text-slate-900 block">{metric.value}</span>
+            </div>
+            <div className={`mt-3 inline-self-start text-[10px] font-bold tracking-wider px-2 py-0.5 rounded ${metric.bg} ${metric.color}`}>
+              {metric.subtext}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Schemes List & Alerts */}
+      {/* 3. Main Dashboard Matrix Splits */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Schemes Matcher Table */}
-        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4 overflow-hidden">
-          <span className="text-sm font-bold text-gray-800 tracking-wide mb-1 block">
-            Eligible Welfare & Subsidy Matrices
-          </span>
+        
+        {/* Left Column: Eligible Welfare & Subsidy Matrices Table */}
+        <div className="lg:col-span-2 bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+          <h2 className="text-base font-bold text-slate-900 mb-4">Eligible Welfare & Subsidy Matrices</h2>
+          
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[500px]">
+            <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  <th className="p-3 pl-1">Scheme Name</th>
-                  <th className="p-3">Eligibility Index</th>
-                  <th className="p-3">Benefits/Disbursal</th>
-                  <th className="p-3 text-right pr-2">Action / Status</th>
+                <tr className="border-b border-slate-100 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                  <th className="pb-3 font-semibold">Scheme Name</th>
+                  <th className="pb-3 font-semibold">Eligibility Index</th>
+                  <th className="pb-3 font-semibold">Benefits/Disbursal</th>
+                  <th className="pb-3 font-semibold text-right">Action / Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100/60">
-                {schemes.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    className="hover:bg-[#f4f7f4]/30 transition-colors text-xs font-semibold"
-                  >
-                    <td className="p-3 pl-1 text-gray-900 font-bold">
-                      {item.name}
-                    </td>
-                    <td className="p-3 text-emerald-700 font-black">
-                      {item.match}
-                    </td>
-                    <td className="p-3 text-gray-550">{item.payout}</td>
-                    <td className="p-3 text-right pr-2">
-                      <span
-                        className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded ${
-                          item.status === "Apply Now"
-                            ? "bg-[#31572c] text-white cursor-pointer hover:bg-[#132a13]"
-                            : "bg-emerald-50 text-emerald-700"
-                        }`}
-                      >
-                        {item.status}
-                      </span>
+              <tbody className="divide-y divide-slate-50">
+                {schemes.map((scheme) => (
+                  <tr key={scheme.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="py-4 font-medium text-slate-900 pr-2">{scheme.name}</td>
+                    <td className="py-4 text-emerald-600 font-bold">{scheme.eligibility}</td>
+                    <td className="py-4 text-slate-500 font-medium">{scheme.benefit}</td>
+                    <td className="py-4 text-right">
+                      {scheme.actionType === 'badge-success' && (
+                        <span className="inline-block px-3 py-1 text-xs font-bold bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100">
+                          {scheme.status}
+                        </span>
+                      )}
+                      {scheme.actionType === 'badge-neutral' && (
+                        <span className="inline-block px-3 py-1 text-xs font-bold bg-slate-100 text-slate-600 rounded-lg">
+                          {scheme.status}
+                        </span>
+                      )}
+                      {scheme.actionType === 'button-primary' && (
+                        <button 
+                          onClick={() => handleActionClick(scheme.name, scheme.actionType)}
+                          className="px-4 py-1 text-xs font-bold bg-emerald-800 text-white rounded-lg hover:bg-emerald-900 transition-colors shadow-sm"
+                        >
+                          {scheme.status}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -170,47 +162,52 @@ export default function GovSchemesDashboard() {
           </div>
         </div>
 
-        {/* Right Column: Dynamic Timeline Announcements */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/60 shadow-sm space-y-4">
-          <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-            <Landmark size={13} className="text-[#31572c]" />
-            <span>Scheme Reminders</span>
-          </h3>
-
-          <div className="space-y-3">
-            <div className="bg-amber-50/50 border border-amber-100 p-3 rounded-xl flex gap-2.5">
-              <AlertCircle
-                size={18}
-                className="text-amber-700 shrink-0 mt-0.5"
-              />
-              <div>
-                <span className="text-[10px] font-bold text-amber-900 block">
-                  e-KYC Mandatory Deadline
-                </span>
-                <span className="text-[11px] text-gray-600 block mt-0.5 leading-relaxed font-semibold">
-                  PM-KISAN online OTP-based KYC must be completed by Sunday to
-                  avoid installment delay.
-                </span>
-              </div>
+        {/* Right Column: Alerts & Reminders */}
+        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center space-x-2 text-slate-400 font-bold text-xs uppercase tracking-wider mb-4">
+              <Clock className="w-4 h-4 text-slate-400" />
+              <h2>Scheme Reminders</h2>
             </div>
 
-            <div className="bg-emerald-50/50 border border-emerald-100 p-3 rounded-xl flex gap-2.5">
-              <CheckCircle2
-                size={18}
-                className="text-[#31572c] shrink-0 mt-0.5"
-              />
-              <div>
-                <span className="text-[10px] font-bold text-[#132a13] block">
-                  Super-Seeder Subsidy
-                </span>
-                <span className="text-[11px] text-gray-600 block mt-0.5 leading-relaxed font-medium">
-                  Haryana Department of Agriculture opens online portal window.
-                  First-come first-served registry active.
-                </span>
+            <div className="space-y-4">
+              {/* Alert 1: e-KYC */}
+              <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl flex items-start space-x-3">
+                <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-xs font-bold text-orange-800">e-KYC Mandatory Deadline</h3>
+                  <p className="text-xs text-orange-700 mt-1 leading-relaxed">
+                    PM-KISAN online OTP-based KYC must be completed by Sunday to avoid installment delay.
+                  </p>
+                </div>
+              </div>
+
+              {/* Alert 2: Super-Seeder Subsidy */}
+              <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl flex items-start space-x-3">
+                <CheckCircle className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-xs font-bold text-emerald-900">Super-Seeder Subsidy</h3>
+                  <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
+                    {userProfile.state} Department of Agriculture opens online portal window. First-come first-served registry active.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Quick Help link footer matching the premium layout style */}
+          <div className="pt-4 border-t border-slate-100 mt-6 flex items-center justify-between text-xs text-slate-400 font-medium">
+            <span className="flex items-center space-x-1">
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>Need help claiming?</span>
+            </span>
+            <a href="#help" className="text-emerald-800 hover:underline font-bold flex items-center">
+              View Guide <ArrowRight className="w-3 h-3 ml-0.5" />
+            </a>
+          </div>
+
         </div>
+
       </div>
     </div>
   );

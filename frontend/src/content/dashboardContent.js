@@ -76,7 +76,33 @@ export const dashboardContent = {
       { label: "Overview Dashboard", path: "", icon: "LayoutDashboard" },
       { label: "Bilingual Lecture Hall", path: "lectures", icon: "GraduationCap" },
       { label: "Crop Knowledge Base", path: "kb", icon: "BookOpen" },
-      { label: "Interactive Quizzes", path: "quizzes", icon: "Award" }
+      { label: "Interactive Quizzes", path: "quizzes", icon: "Award" },
+      { label: "Expert Webinars", path: "webinars", icon: "CalendarClock" },
+      { label: "Virtual Farm Tours", path: "tours", icon: "View" }
+    ],
+    "gov-schemes": [
+      { label: "Overview Dashboard", path: "", icon: "LayoutDashboard" },
+      { label: "Scheme Matcher", path: "matching", icon: "FileText" },
+      { label: "Subsidy Tracker", path: "subsidies", icon: "CircleDollarSign" },
+      { label: "Application Center", path: "applications", icon: "MousePointerClick" },
+      { label: "State Grants", path: "state-grants", icon: "Landmark" },
+      { label: "State Allocations", path: "budget", icon: "PieChart" }
+    ],
+    "research-ai": [
+      { label: "Overview Dashboard", path: "", icon: "LayoutDashboard" },
+      { label: "RAG Engine", path: "rag", icon: "Database" },
+      { label: "Pathology Search", path: "pathology", icon: "Microscope" },
+      { label: "Translation Center", path: "translate", icon: "Languages" },
+      { label: "Predictor Models", path: "models", icon: "Network" },
+      { label: "Soil Microbiome", path: "microbiome", icon: "Dna" }
+    ],
+    "news-intel": [
+      { label: "Overview Dashboard", path: "", icon: "LayoutDashboard" },
+      { label: "Mandi News Feed", path: "mandi", icon: "Newspaper" },
+      { label: "Policy Updates", path: "policies", icon: "BookOpen" },
+      { label: "Market Impact Ratings", path: "impact", icon: "Activity" },
+      { label: "AgriTech Trends", path: "agritech", icon: "Cpu" },
+      { label: "Export Trends", path: "exports", icon: "Ship" }
     ]
   },
 
