@@ -1,5 +1,11 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
+import { 
+  BrowserRouter, 
+  Routes, 
+  Route, 
+  useParams,
+  useLocation
+} from 'react-router-dom';
 import Navbar from './components/header/Navbar';
 import Home from './pages/home/Home';
 import ModuleLayout from './components/layout/ModuleLayout';
@@ -10,8 +16,25 @@ import YieldRoiPredictor from './pages/crop-recommendation/YieldRoiPredictor';
 import MultiCropCompare from './pages/crop-recommendation/MultiCropCompare';
 import PestRiskDetection from './pages/crop-recommendation/PestRiskDetection';
 import MarketDemand from './pages/crop-recommendation/MarketDemand';
+import FarmJournal from './pages/crop-recommendation/FarmJournal';
+
 import PestDiseaseDashboard from './pages/disease-detection/PestDiseaseDashboard';
-import AiSuggestionDashboard from './pages/ai-suggestion/AiSuggestionDashboard';
+import RiskPredictionEngine from './pages/disease-detection/RiskPredictionEngine';
+import RegionHeatmap from './pages/disease-detection/RegionHeatmap';
+import TreatmentAdvisor from './pages/disease-detection/TreatmentAdvisor';
+import CropLifecycle from './pages/disease-detection/CropLifecycle';
+import HistoricalOutbreaks from './pages/disease-detection/HistoricalOutbreaks';
+import LeafScanner from './pages/disease-detection/LeafScanner';
+
+import AiAssistant from './pages/ai-suggestion/AiAssistant';
+import IrrigationScheduler from './pages/ai-suggestion/IrrigationScheduler';
+import FertilizerPlanner from './pages/ai-suggestion/FertilizerPlanner';
+import MandiPriceTracker from './pages/ai-suggestion/MandiPriceTracker';
+import LifecyclePredictor from './pages/ai-suggestion/LifecyclePredictor';
+
+import Profile from './pages/home/Profile';
+import ScrollToTop from './components/utils/ScrollToTop';
+
 import GovSchemesDashboard from './pages/gov-schemes/GovSchemesDashboard';
 import ResearchAiDashboard from './pages/research-ai/ResearchAiDashboard';
 import NewsIntelDashboard from './pages/news-intel/NewsIntelDashboard';
@@ -26,11 +49,10 @@ import ApplicationCenter from './pages/gov-schemes/ApplicationCenter';
 import StateGrants from './pages/gov-schemes/StateGrants';
 import StateBudgetAllocation from './pages/gov-schemes/StateBudgetAllocation';
 
-import RagEngine from './pages/research-ai/RagEngine';
-import PathologySearch from './pages/research-ai/PathologySearch';
+import ResearchSummary from './pages/research-ai/ResearchSummary';
+import ResearchDrafting from './pages/research-ai/ResearchDrafting';
 import TranslationCenter from './pages/research-ai/TranslationCenter';
 import YieldPredictorModels from './pages/research-ai/YieldPredictorModels';
-import SoilMicrobiomeResearch from './pages/research-ai/SoilMicrobiomeResearch';
 
 import LectureHall from './pages/learning-hub/LectureHall';
 import KnowledgeBase from './pages/learning-hub/KnowledgeBase';
@@ -84,7 +106,11 @@ function LandingPage() {
 function DashboardSwitcher() {
   const { moduleId, '*': subPath } = useParams();
 
-  // ── Crop Recommendation (existing) ─────────────────────────────────────────
+  if (moduleId === 'profile') {
+    return <Profile />;
+  }
+
+  // Crop Recommendation module — sub-page routing
   if (moduleId === 'crop-recommendation') {
     if (subPath === 'crop-ranking') return <CropRankingEngine />;
     if (subPath === 'seasonal-calendar') return <SeasonalCalendar />;
@@ -92,14 +118,29 @@ function DashboardSwitcher() {
     if (subPath === 'crop-compare') return <MultiCropCompare />;
     if (subPath === 'pest-risk') return <PestRiskDetection />;
     if (subPath === 'market-demand') return <MarketDemand />;
+    if (subPath === 'farm-journal') return <FarmJournal />;
     return <CropRecommendationDashboard />;
   }
 
-  // ── Disease Detection (existing) ───────────────────────────────────────────
-  if (moduleId === 'disease-detection') return <PestDiseaseDashboard />;
+  // Disease Detection module — sub-page routing
+  if (moduleId === 'disease-detection') {
+    if (subPath === 'leaf-scanner') return <LeafScanner />;
+    if (subPath === 'risk-prediction') return <RiskPredictionEngine />;
+    if (subPath === 'heatmap') return <RegionHeatmap />;
+    if (subPath === 'treatment') return <TreatmentAdvisor />;
+    if (subPath === 'lifecycle') return <CropLifecycle />;
+    if (subPath === 'history') return <HistoricalOutbreaks />;
+    return <PestDiseaseDashboard />;
+  }
 
-  // ── AI Agriculture Assistant (existing) ───────────────────────────────────
-  if (moduleId === 'ai-suggestion') return <AiSuggestionDashboard />;
+  // AI Agriculture Assistant / suggestion routing
+  if (moduleId === 'ai-suggestion') {
+    if (subPath === 'irrigation') return <IrrigationScheduler />;
+    if (subPath === 'fertilizer') return <FertilizerPlanner />;
+    if (subPath === 'mandi-tracker') return <MandiPriceTracker />;
+    if (subPath === 'lifecycle') return <LifecyclePredictor />;
+    return <AiAssistant />;
+  }
 
   // ── Commodity Market Intelligence (NEW) ────────────────────────────────────
   if (moduleId === 'market-intelligence') {
@@ -134,11 +175,10 @@ function DashboardSwitcher() {
 
   // White Paper & Research AI routing
   if (moduleId === 'research-ai') {
-    if (subPath === 'rag') return <RagEngine />;
-    if (subPath === 'pathology') return <PathologySearch />;
+    if (subPath === 'summary') return <ResearchSummary />;
+    if (subPath === 'drafting') return <ResearchDrafting />;
     if (subPath === 'translate') return <TranslationCenter />;
     if (subPath === 'models') return <YieldPredictorModels />;
-    if (subPath === 'microbiome') return <SoilMicrobiomeResearch />;
     return <ResearchAiDashboard />;
   }
 
@@ -210,6 +250,7 @@ function DashboardSwitcher() {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* Main Landing Page */}
         <Route path="/" element={<LandingPage />} />

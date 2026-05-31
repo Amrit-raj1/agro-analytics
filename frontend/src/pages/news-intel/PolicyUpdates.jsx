@@ -10,15 +10,19 @@ import {
   X,
   Download,
   Printer,
-  ChevronRight,
-  ShieldCheck,
+  Sparkles,
+  Loader2,
+  AlertCircle,
   FileText
 } from 'lucide-react';
+import { generateContent } from '../../services/gemini/client';
 
 export default function PolicyUpdates() {
   const [selectedPolicy, setSelectedPolicy] = useState(null);
-
-  const policies = [
+  const [policyInput, setPolicyInput] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [policies, setPolicies] = useState([
     {
       id: 1,
       date: "May 28, 2026",
@@ -76,70 +80,72 @@ export default function PolicyUpdates() {
           "Payment processing completes within 14 working days of database registration."
         ]
       }
-    },
-    {
-      id: 3,
-      date: "May 18, 2026",
-      tag: "EXPORT REGULATION",
-      title: "Minimum Export Price (MEP) on Onion Removed",
-      description: "DGFT notification confirms the removal of the $550 per tonne MEP on onions to boost exports and domestic wholesale prices following a bumper rabi harvest.",
-      impact: "MARKET MOVING",
-      icon: TrendingUp,
-      iconColor: "text-amber-700 bg-amber-50 border-amber-100",
-      dotColor: "bg-amber-500",
-      gazetteMeta: {
-        ministry: "Ministry of Commerce and Industry",
-        department: "Directorate General of Foreign Trade (DGFT)",
-        refNo: "Notification No. 08/2026-DGFT",
-        signedBy: "Dr. Alok Vardhan, Director General",
-        details: [
-          { label: "Previous MEP Rate", value: "$550 per Metric Tonne" },
-          { label: "Effective Date", value: "Immediate (From May 18, 2026)" },
-          { label: "HS Code target", value: "07031010 (Fresh Onions)" },
-          { label: "Export Policy Status", value: "Free (Shifted from Restricted)" }
-        ],
-        background: "A record rabi crop harvest in Maharashtra, Karnataka, and Gujarat has led to excessive domestic reserves. Removing the MEP enables competitive participation of domestic exporters in global markets.",
-        directives: [
-          "Exporters must obtain valid Phytosanitary Certificates before custom clearances.",
-          "No MEP applies to consignments loaded on vessels prior to this gazette release.",
-          "Quantity check monitoring will run weekly to prevent domestic scarcity."
-        ]
-      }
-    },
-    {
-      id: 4,
-      date: "May 10, 2026",
-      tag: "QUALITY STANDARDS",
-      title: "New FSSAI Limits for Pesticide Residues in Spices",
-      description: "Stringent Maximum Residue Limits (MRLs) established for 14 common pesticides in export-grade spices. Testing mandatory at certified NABL labs.",
-      impact: "COMPLIANCE REQUIRED",
-      icon: AlertTriangle,
-      iconColor: "text-rose-700 bg-rose-50 border-rose-100",
-      dotColor: "bg-rose-500",
-      gazetteMeta: {
-        ministry: "Ministry of Health and Family Welfare",
-        department: "Food Safety and Standards Authority of India (FSSAI)",
-        refNo: "F.No. Spices-MRL/2026/FSSAI",
-        signedBy: "Shri Vivek Chandra, Director (Standards)",
-        details: [
-          { label: "Pesticides Addressed", value: "Ethylene Oxide, Chlorpyrifos +12 others" },
-          { label: "Enforcement Node", value: "All custom checkposts and domestic packaging hubs" },
-          { label: "Audit Standard", value: "NABL Certified GC-MS/MS testing" },
-          { label: "Compliance Deadline", value: "July 1, 2026" }
-        ],
-        background: "In response to international trade quality alerts, limits are updated to maintain export compliance protocols and guarantee residue-free agricultural produce.",
-        directives: [
-          "Spices exceeding 0.01 mg/kg residue limits will be rejected at export points.",
-          "Compulsory batch sampling of Cardamom, Cumin, and Turmeric at regional labs.",
-          "All organic farm claims must be supported by active NPOP certificates."
-        ]
-      }
     }
-  ];
+  ]);
+
+  const handleAnalyzePolicy = async (e) => {
+    e.preventDefault();
+    const queryText = policyInput.trim();
+    if (!queryText) {
+      setErrorMsg("Please enter a policy query or agricultural regulation.");
+      return;
+    }
+
+    setAnalyzing(true);
+    setErrorMsg("");
+
+    const prompt = `You are a legal and economic policy analyst at the Department of Agriculture, Government of India. Analyze the following agricultural policy or regulation: "${queryText}".
+    Generate a complete, structured policy update corresponding to this query.
+
+    Structure your response as a valid JSON object. Do not include markdown tags (like \`\`\`json). Return ONLY the raw JSON string.
+    The JSON object must have exactly these keys:
+    1. "title": A realistic, professional notification headline.
+    2. "description": A concise summary (30-45 words) explaining the policy shift.
+    3. "tag": Policy scope tag (e.g. "CENTRAL SCHEME", "STATE POLICY: PB", "QUALITY STANDARDS").
+    4. "impact": Impact level (e.g. "HIGH IMPACT", "COMPLIANCE REQUIRED", "MARKET MOVING").
+    5. "gazetteMeta": A sub-object containing:
+       - "ministry": Name of the Ministry (e.g., "Ministry of Agriculture and Farmers Welfare").
+       - "department": Specific Department name.
+       - "refNo": Standard reference number (e.g., "G.S.R. 294(E)").
+       - "signedBy": Name and title of the signing authority.
+       - "details": An array of exactly 4 objects containing {"label": "...", "value": "..."} key-value metrics.
+       - "background": A paragraph (50-70 words) explaining the preamble and context of this policy.
+       - "directives": An array of exactly 3 specific, numbered directives.`;
+
+    try {
+      const response = await generateContent(prompt, {
+        system_instruction: "You are an expert in Indian agricultural legislation and gazette publication templates. Always return response as raw JSON.",
+        temperature: 0.2
+      });
+
+      let cleanJson = response.trim();
+      if (cleanJson.startsWith("```")) {
+        cleanJson = cleanJson.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+      }
+
+      const parsed = JSON.parse(cleanJson);
+      
+      const newPolicy = {
+        id: Date.now(),
+        date: "Today",
+        icon: Scale,
+        dotColor: "bg-emerald-500",
+        ...parsed
+      };
+
+      setPolicies((prev) => [newPolicy, ...prev]);
+      setSelectedPolicy(newPolicy);
+      setPolicyInput("");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Could not analyze policy. Check your connection or key configuration.");
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fadeIn antialiased">
-      
       {/* Page Header */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between">
         <div className="flex items-start space-x-4 z-10">
@@ -149,26 +155,60 @@ export default function PolicyUpdates() {
           <div>
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">Policy & Regulation Updates</h1>
             <p className="text-sm text-slate-500 mt-1">
-              Timeline of state and central agricultural governance
+              Timeline of state and central agricultural governance (Now with AI Gazette Analytics)
             </p>
           </div>
         </div>
       </div>
 
+      {/* AI Policy Impact Analyzer Card */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs space-y-4">
+        <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+          <Sparkles className="h-4 w-4 text-[#31572c]" /> AI Policy Analyst & Gazette Compiler
+        </h3>
+        <form onSubmit={handleAnalyzePolicy} className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            value={policyInput}
+            onChange={(e) => setPolicyInput(e.target.value)}
+            placeholder="e.g. Haryana Drone spray policy, Onion export tariffs, PM-KISAN installment..."
+            className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-[#31572c]/20 focus:border-[#31572c] outline-none"
+            required
+          />
+          <button
+            type="submit"
+            disabled={analyzing}
+            className="bg-[#31572c] hover:bg-[#1a3018] text-white py-3 px-5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-xs shadow-xs shrink-0 disabled:opacity-60"
+          >
+            {analyzing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Analyzing Policy...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" /> Analyze Impact
+              </>
+            )}
+          </button>
+        </form>
+
+        {errorMsg && (
+          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex items-center gap-2 text-xs font-bold">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+      </div>
+
       {/* Main Single Column Card Container */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm">
-        
         {/* Vertical Timeline Pipeline */}
         <div className="relative pl-4 sm:pl-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
-          {policies.map((policy, index) => {
-            const Icon = policy.icon;
+          {policies.map((policy) => {
             return (
-              <div key={policy.id} className={`relative mb-12 last:mb-0 group`}>
-                
-                {/* Timeline Dot / Icon Anchor */}
-                <div className={`absolute -left-[19px] sm:-left-[23px] top-1.5 w-6 h-6 rounded-full flex items-center justify-center border-4 border-white ${policy.dotColor} shadow-sm z-10 transition-transform group-hover:scale-110`}>
-                  {/* Outer circle decoration */}
-                </div>
+              <div key={policy.id} className="relative mb-12 last:mb-0 group">
+                {/* Timeline Dot */}
+                <div className={`absolute -left-[19px] sm:-left-[23px] top-1.5 w-6 h-6 rounded-full flex items-center justify-center border-4 border-white ${policy.dotColor || 'bg-emerald-500'} shadow-sm z-10 transition-transform group-hover:scale-110`} />
 
                 <div className="ml-6 sm:ml-8">
                   {/* Date & Badges */}
@@ -176,12 +216,10 @@ export default function PolicyUpdates() {
                     <span className="text-xs font-extrabold text-[#31572c] tracking-tight">{policy.date}</span>
                     <span className="text-slate-300 hidden sm:inline">•</span>
                     
-                    {/* Badge 1: Scope */}
                     <span className="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700 uppercase border border-slate-200">
                       {policy.tag}
                     </span>
                     
-                    {/* Badge 2: Impact */}
                     <span className="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-700 uppercase border border-amber-100">
                       {policy.impact}
                     </span>
@@ -200,7 +238,7 @@ export default function PolicyUpdates() {
                   {/* Action Link Trigger */}
                   <button 
                     onClick={() => setSelectedPolicy(policy)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 hover:text-emerald-950 transition-colors"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-emerald-850 hover:text-emerald-950 transition-colors"
                   >
                     <span>View Official Gazette</span>
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -210,17 +248,14 @@ export default function PolicyUpdates() {
             );
           })}
         </div>
-
       </div>
 
       {/* Gazette Bulletin Summary Drawer */}
       {selectedPolicy && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-end z-50 animate-fadeIn">
-          {/* Overlay Click Close */}
           <div className="absolute inset-0" onClick={() => setSelectedPolicy(null)} />
           
           <div className="bg-white h-full max-w-2xl w-full border-l border-slate-100 shadow-2xl relative z-10 flex flex-col justify-between animate-slideOver">
-            
             {/* Header */}
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -239,11 +274,8 @@ export default function PolicyUpdates() {
 
             {/* Document Content Box */}
             <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 bg-slate-50/50">
-              
-              {/* Gazette Document Wrapper */}
               <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xs relative overflow-hidden font-sans">
-                
-                {/* Government Watermark / Emblem Line */}
+                {/* Government Watermark */}
                 <div className="text-center pb-6 border-b border-double border-slate-300">
                   <div className="text-[10px] tracking-widest font-black uppercase text-slate-400 mb-1">
                     THE GAZETTE OF INDIA / भारत का राजपत्र
@@ -257,7 +289,6 @@ export default function PolicyUpdates() {
                 </div>
 
                 <div className="mt-6 space-y-4">
-                  {/* Origin */}
                   <div className="text-center space-y-1">
                     <h4 className="text-sm font-extrabold text-slate-900 uppercase">
                       {selectedPolicy.gazetteMeta.ministry}
@@ -272,7 +303,6 @@ export default function PolicyUpdates() {
 
                   <div className="h-px bg-slate-200 my-4" />
 
-                  {/* Title */}
                   <div className="space-y-1.5">
                     <span className="text-[10px] font-bold text-emerald-800 tracking-wider uppercase block">
                       Subject Notification
@@ -313,7 +343,7 @@ export default function PolicyUpdates() {
                     </span>
                     <ul className="space-y-2">
                       {selectedPolicy.gazetteMeta.directives.map((directive, index) => (
-                        <li key={index} className="flex gap-2 text-xs text-slate-600 items-start">
+                        <li key={index} className="flex gap-2 text-xs text-slate-600 items-start font-semibold">
                           <span className="font-bold text-emerald-800 shrink-0 mt-0.5">{index + 1}.</span>
                           <span className="leading-relaxed">{directive}</span>
                         </li>
@@ -333,11 +363,8 @@ export default function PolicyUpdates() {
                       Authenticated Electronic Record
                     </p>
                   </div>
-
                 </div>
-
               </div>
-
             </div>
 
             {/* Bottom Actions bar */}
@@ -365,11 +392,9 @@ export default function PolicyUpdates() {
                 Acknowledge
               </button>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }

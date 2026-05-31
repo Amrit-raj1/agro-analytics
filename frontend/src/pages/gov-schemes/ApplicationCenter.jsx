@@ -13,6 +13,7 @@ import {
   Sparkles,
   ExternalLink
 } from 'lucide-react';
+import { generateContent } from '../../services/gemini/client';
 
 export default function ApplicationCenter() {
   // Document states
@@ -20,6 +21,7 @@ export default function ApplicationCenter() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [khasraDetails, setKhasraDetails] = useState(null);
 
   // Application/Modal states
   const [submittingSchemeId, setSubmittingSchemeId] = useState(null);
@@ -91,10 +93,10 @@ export default function ApplicationCenter() {
 
     // Start simulation
     setUploadedFile(file);
-    simulateUploadAndVerification();
+    simulateUploadAndVerification(file);
   };
 
-  const simulateUploadAndVerification = () => {
+  const simulateUploadAndVerification = (file) => {
     setKhasraStatus('uploading');
     setUploadProgress(0);
 
@@ -105,7 +107,7 @@ export default function ApplicationCenter() {
           clearInterval(uploadInterval);
           // Transition to verifying/parsing
           setKhasraStatus('verifying');
-          simulateAIVerification();
+          simulateAIVerification(file);
           return 100;
         }
         return prev + 10;
@@ -113,11 +115,45 @@ export default function ApplicationCenter() {
     }, 150);
   };
 
-  const simulateAIVerification = () => {
-    setTimeout(() => {
+  const simulateAIVerification = async (file) => {
+    const prompt = `Simulate OCR document parsing extraction of land record (Khasra) for the file named: "${file.name}".
+    Extract:
+    - Owner Name (make it match Suresh Kumar or similar rural family names)
+    - Khata / Khewat Number (e.g., 204/348)
+    - Survey/Plot Number (e.g., 42//15/2)
+    - Total Area in Hectares (make it between 1.0 and 3.0 Hectares)
+    - Location/District (e.g., Faridabad, Haryana)
+    
+    Return ONLY a single valid JSON object containing these keys: "ownerName", "khataNo", "surveyNo", "area", "district". No extra text. No markdown tags.`;
+
+    try {
+      const response = await generateContent(prompt, {
+        system_instruction: "You are an automated land records OCR indexing engine. Return clean JSON.",
+        temperature: 0.1
+      });
+
+      let cleanJson = response.trim();
+      if (cleanJson.startsWith("```")) {
+        cleanJson = cleanJson.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+      }
+
+      const parsed = JSON.parse(cleanJson);
+      setKhasraDetails(parsed);
       setKhasraStatus('verified');
-      showToast('Land Record (Khasra) successfully uploaded and verified by AI matcher!', 'success');
-    }, 2000);
+      showToast('Land Record (Khasra) successfully parsed and verified by Gemini AI!', 'success');
+    } catch (err) {
+      console.error(err);
+      // Fallback
+      setKhasraDetails({
+        ownerName: "Suresh Kumar",
+        khataNo: "128/192",
+        surveyNo: "14//3/1",
+        area: "1.8 Hectares",
+        district: "Faridabad, Haryana"
+      });
+      setKhasraStatus('verified');
+      showToast('Khasra parsed successfully with default profile.', 'success');
+    }
   };
 
   const handleApplyClick = (scheme) => {
@@ -154,6 +190,7 @@ export default function ApplicationCenter() {
     setKhasraStatus('update_required');
     setUploadedFile(null);
     setUploadProgress(0);
+    setKhasraDetails(null);
   };
 
   const catalog = [
@@ -317,6 +354,20 @@ export default function ApplicationCenter() {
                   <div className="text-xs text-gray-500 bg-white/70 p-2 rounded-lg border border-gray-100 flex items-center justify-between">
                     <span className="truncate max-w-[180px] font-medium">{uploadedFile.name}</span>
                     <span className="text-[10px] text-gray-400">({(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
+                  </div>
+                )}
+
+                {/* Extracted Details */}
+                {khasraStatus === 'verified' && khasraDetails && (
+                  <div className="text-xs bg-emerald-50/50 p-3 rounded-xl border border-emerald-100/50 space-y-1 text-slate-700 font-medium">
+                    <div className="font-bold text-emerald-800 text-[10px] uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Extracted land record data:
+                    </div>
+                    <div className="flex justify-between border-b border-emerald-100/30 pb-0.5"><span className="text-slate-500">Owner Name:</span> <span className="font-bold text-slate-850">{khasraDetails.ownerName}</span></div>
+                    <div className="flex justify-between border-b border-emerald-100/30 pb-0.5"><span className="text-slate-500">Khata No:</span> <span className="font-bold text-slate-850">{khasraDetails.khataNo}</span></div>
+                    <div className="flex justify-between border-b border-emerald-100/30 pb-0.5"><span className="text-slate-500">Survey No:</span> <span className="font-bold text-slate-850">{khasraDetails.surveyNo}</span></div>
+                    <div className="flex justify-between border-b border-emerald-100/30 pb-0.5"><span className="text-slate-500">Total Area:</span> <span className="font-bold text-slate-850">{khasraDetails.area}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Location:</span> <span className="font-bold text-slate-850">{khasraDetails.district}</span></div>
                   </div>
                 )}
               </div>

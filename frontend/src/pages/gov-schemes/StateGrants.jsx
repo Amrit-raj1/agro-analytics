@@ -10,11 +10,14 @@ import {
   Check, 
   Info,
   MapPin,
-  HelpCircle
+  HelpCircle,
+  Loader2
 } from 'lucide-react';
+import { generateContent } from '../../services/gemini/client';
 
 export default function StateGrants() {
   const [activeModalGrant, setActiveModalGrant] = useState(null); // stores grant object when modal is open
+  const [calculating, setCalculating] = useState(false);
 
   // Cold Storage Eligibility State
   const [coldStorageAnswers, setColdStorageAnswers] = useState({
@@ -73,7 +76,7 @@ export default function StateGrants() {
     setEligibilityResult(null);
   };
 
-  const calculateColdStorageEligibility = (e) => {
+  const calculateColdStorageEligibility = async (e) => {
     e.preventDefault();
     const { farmerType, capacity } = coldStorageAnswers;
 
@@ -94,34 +97,47 @@ export default function StateGrants() {
       return;
     }
 
-    if (farmerType === 'individual') {
-      if (capVal > 25) {
-        setEligibilityResult({
-          status: 'warning',
-          message: 'Subsidy limit for Individual Farmers is capped at 25 Metric Tons (MT) capacity. Please reduce the proposed capacity or apply as a Registered FPO to qualify.'
-        });
-      } else {
-        setEligibilityResult({
-          status: 'success',
-          message: 'You are highly eligible! Individual farmers qualify for 35% capital subsidy on units up to 25 MT. Proceed to document upload.'
-        });
+    setCalculating(true);
+    setEligibilityResult(null);
+
+    const prompt = `Evaluate eligibility for Madhya Pradesh Cold Storage Infrastructure Subsidy:
+    - Entity Type: ${farmerType}
+    - Storage Capacity Requested: ${capacity} Metric Tons (MT)
+
+    Rule Guidance:
+    - Madhya Pradesh state solar storage grants support units between 5 to 500 MT capacity.
+    - Individual farmers typically qualify for 35% capital subsidy capped at 25 MT capacity. FPOs qualify for a 50% capital subsidy up to ₹50 Lakhs for capacity up to 500 MT.
+    
+    Determine if they qualify (success status) or need to modify their proposal (warning status).
+    Return ONLY a single valid JSON object with keys "status" (either "success" or "warning") and "message" (a brief, professional assessment explaining their subsidy percentage and next steps). Do not include markdown tags.`;
+
+    try {
+      const response = await generateContent(prompt, {
+        system_instruction: "You are an expert government welfare advisor validating cold storage infrastructure subsidies. Return clean JSON.",
+        temperature: 0.2
+      });
+
+      let cleanJson = response.trim();
+      if (cleanJson.startsWith("```")) {
+        cleanJson = cleanJson.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
       }
-    } else if (farmerType === 'fpo') {
-      if (capVal > 500) {
-        setEligibilityResult({
-          status: 'warning',
-          message: 'The maximum capacity supported under this subsidy is 500 MT. Please adjust your project proposal capacity.'
-        });
-      } else {
-        setEligibilityResult({
-          status: 'success',
-          message: 'You are highly eligible! FPOs qualify for a 50% capital subsidy (up to ₹50 Lakhs) for solar-powered cold storage setups. Proceed to document upload.'
-        });
-      }
+
+      const result = JSON.parse(cleanJson);
+      setEligibilityResult(result);
+    } catch (err) {
+      console.error(err);
+      setEligibilityResult({
+        status: farmerType === 'individual' && capVal > 25 ? 'warning' : 'success',
+        message: farmerType === 'individual' && capVal > 25 
+          ? 'Subsidy limit for Individual Farmers is capped at 25 Metric Tons (MT). Please reduce capacity or register as FPO.'
+          : 'You are eligible! Proceed to upload documents.'
+      });
+    } finally {
+      setCalculating(false);
     }
   };
 
-  const calculateAgroProcessingEligibility = (e) => {
+  const calculateAgroProcessingEligibility = async (e) => {
     e.preventDefault();
     const { nearFarmGate, sorting, grading, packing } = agroProcessingAnswers;
 
@@ -141,23 +157,48 @@ export default function StateGrants() {
       return;
     }
 
-    if (nearFarmGate === false) {
-      setEligibilityResult({
-        status: 'warning',
-        message: 'Ineligible: Facility must be located near farm gates (within 15km radius) to qualify for state matching funds. This reduces transport time and maintains freshness.'
+    setCalculating(true);
+    setEligibilityResult(null);
+
+    const activities = [];
+    if (sorting) activities.push("Sorting");
+    if (grading) activities.push("Grading");
+    if (packing) activities.push("Packing");
+
+    const prompt = `Evaluate eligibility for Haryana Agro-Processing Setup Grant:
+    - Located near farm gate (within 15km): ${nearFarmGate ? "Yes" : "No"}
+    - Activities selected: ${activities.join(", ")}
+
+    Rule Guidance:
+    - Facility must be located near registered farm gates (within 15km) to qualify. If not, they are ineligible.
+    - Implementing all 3 (Sorting, Grading, Packing) qualifies for the maximum 40% state matching grant. Fewer activities still qualify but may get lower priority.
+
+    Determine if they qualify (success status) or are ineligible (warning status).
+    Return ONLY a single valid JSON object with keys "status" (either "success" or "warning") and "message" (a brief, helpful assessment). Do not include markdown tags.`;
+
+    try {
+      const response = await generateContent(prompt, {
+        system_instruction: "You are an expert government welfare advisor validating agro-processing matching grants. Return clean JSON.",
+        temperature: 0.2
       });
-    } else {
-      const activitiesCount = [sorting, grading, packing].filter(Boolean).length;
-      let matchMsg = 'You are highly eligible! ';
-      if (activitiesCount === 3) {
-        matchMsg += 'Establishing a fully integrated Sorting, Grading, and Packing unit qualifies for the maximum 40% state matching grant.';
-      } else {
-        matchMsg += 'Your primary processing proposal qualifies for the 40% project cost subsidy near agricultural hubs.';
+
+      let cleanJson = response.trim();
+      if (cleanJson.startsWith("```")) {
+        cleanJson = cleanJson.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
       }
+
+      const result = JSON.parse(cleanJson);
+      setEligibilityResult(result);
+    } catch (err) {
+      console.error(err);
       setEligibilityResult({
-        status: 'success',
-        message: matchMsg + ' Proceed to document upload.'
+        status: nearFarmGate ? 'success' : 'warning',
+        message: nearFarmGate 
+          ? 'You are eligible! Establishing your primary processing unit qualifies for the 40% matching grant.'
+          : 'Ineligible: Facility must be located near farm gates (within 15km) to qualify.'
       });
+    } finally {
+      setCalculating(false);
     }
   };
 
@@ -316,9 +357,16 @@ export default function StateGrants() {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full bg-[#31572c] hover:bg-[#1a3018] text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-xs"
+                    disabled={calculating}
+                    className="w-full bg-[#31572c] hover:bg-[#1a3018] text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
                   >
-                    Calculate Eligibility
+                    {calculating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Evaluating...
+                      </>
+                    ) : (
+                      "Calculate Eligibility"
+                    )}
                   </button>
                 </div>
               </form>
@@ -395,9 +443,16 @@ export default function StateGrants() {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full bg-[#31572c] hover:bg-[#1a3018] text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-xs"
+                    disabled={calculating}
+                    className="w-full bg-[#31572c] hover:bg-[#1a3018] text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
                   >
-                    Calculate Eligibility
+                    {calculating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Evaluating...
+                      </>
+                    ) : (
+                      "Calculate Eligibility"
+                    )}
                   </button>
                 </div>
               </form>
@@ -427,7 +482,6 @@ export default function StateGrants() {
                     <button
                       onClick={() => {
                         handleCloseModal();
-                        // Redirect or mock next step: e.g., open file locker
                         window.location.href = '/module/gov-schemes/applications';
                       }}
                       className="mt-3.5 inline-flex items-center gap-1 bg-[#31572c] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-sm hover:bg-[#1a3018]"

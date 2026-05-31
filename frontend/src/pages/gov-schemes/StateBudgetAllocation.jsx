@@ -8,7 +8,9 @@ import {
   HelpCircle, 
   ChevronRight, 
   ChevronDown,
-  Info
+  Info,
+  Sparkles,
+  Send
 } from 'lucide-react';
 import { 
   PieChart as RechartsPieChart, 
@@ -17,6 +19,7 @@ import {
   ResponsiveContainer, 
   Tooltip 
 } from 'recharts';
+import { generateContent } from '../../services/gemini/client';
 
 // Verified Mock Fallback Data (ensures dashboard works instantly even without API connection)
 const DEFAULT_BUDGET_DATA = [
@@ -44,6 +47,11 @@ export default function StateBudgetAllocation() {
   // Interaction States
   const [activeSector, setActiveSector] = useState(null); // stores hovered budget item
   const [expandedState, setExpandedState] = useState(null); // stores index of clicked state progress bar
+
+  // AI Analyst States
+  const [aiQuery, setAiQuery] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [loadingAi, setLoadingAi] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,6 +91,42 @@ export default function StateBudgetAllocation() {
 
   const handlePieMouseLeave = () => {
     setActiveSector(null);
+  };
+
+  const handleAskAI = async (e) => {
+    e.preventDefault();
+    if (!aiQuery.trim() || loadingAi) return;
+
+    setLoadingAi(true);
+    setAiResponse("");
+
+    const budgetContextStr = budgetData.map(b => `${b.name}: ${formatIndianCurrency(b.value)} (${b.percentage})`).join("\n");
+    const utilizationContextStr = stateUtilization.map(s => `${s.state}: ${s.utilized}% utilized, pending ${s.pending}%`).join("\n");
+
+    const prompt = `Analyze the Union Agriculture Budget and State Fund Utilization data:
+    
+    Union Budget Subsidies outlay:
+    ${budgetContextStr}
+    
+    Top State Utilization index:
+    ${utilizationContextStr}
+    
+    User Query: "${aiQuery.trim()}"
+
+    Respond as an expert Indian agricultural policy and finance analyst. Break down the answer clearly, using concise, simple points. Keep it under 150 words.`;
+
+    try {
+      const result = await generateContent(prompt, {
+        system_instruction: "You are an expert Union budget and agricultural DBT deployment analyst. Provide professional, direct, policy-backed answers.",
+        temperature: 0.3
+      });
+      setAiResponse(result);
+    } catch (err) {
+      console.error(err);
+      setAiResponse("Could not connect to the Budget Analyst. Please verify your internet and try again.");
+    } finally {
+      setLoadingAi(false);
+    }
   };
 
   if (loading) {
@@ -294,6 +338,43 @@ export default function StateBudgetAllocation() {
         </div>
 
       </div>
+
+      {/* AI Union Budget Analyst widget */}
+      <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-4">
+        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+          <Sparkles className="w-4.5 h-4.5 text-emerald-800" />
+          <span>AI Union Budget Analyst</span>
+        </h3>
+        
+        <form onSubmit={handleAskAI} className="flex gap-2">
+          <input
+            type="text"
+            value={aiQuery}
+            onChange={(e) => setAiQuery(e.target.value)}
+            placeholder="Ask AI: e.g. 'Compare the budget share of Crop Insurance vs Interest Subvention' or 'Why did MP focus on solar pumps?'"
+            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-850"
+          />
+          <button
+            type="submit"
+            disabled={loadingAi || !aiQuery.trim()}
+            className="bg-[#31572c] hover:bg-[#1a3018] text-white font-bold p-3.5 rounded-xl shadow-xs transition flex items-center justify-center shrink-0 disabled:opacity-50"
+          >
+            {loadingAi ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          </button>
+        </form>
+
+        {aiResponse && (
+          <div className="p-4 bg-emerald-50/20 border border-emerald-100/50 rounded-2xl animate-fadeIn">
+            <span className="text-[10px] font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase tracking-wider inline-block mb-2">
+              BUDGET INSIGHTS
+            </span>
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold whitespace-pre-line">
+              {aiResponse}
+            </p>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

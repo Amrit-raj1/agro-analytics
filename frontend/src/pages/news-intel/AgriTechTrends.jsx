@@ -9,13 +9,19 @@ import {
   DollarSign,
   Users,
   Compass,
+  Sparkles,
+  Loader2,
+  AlertCircle,
   FileText
 } from 'lucide-react';
+import { generateContent } from '../../services/gemini/client';
 
 export default function AgriTechTrends() {
   const [selectedReport, setSelectedReport] = useState(null);
-
-  const trends = [
+  const [techInput, setTechInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [trends, setTrends] = useState([
     {
       id: 1,
       title: "Drone-Based Precision Spraying Approved in Punjab",
@@ -51,30 +57,70 @@ export default function AgriTechTrends() {
         roi: "18% yield premium due to sugar-content optimization via uniform moisture management.",
         specs: "Multi-depth soil moisture NPK sensors, LoRaWAN/NB-IoT support, 5-year battery life."
       }
-    },
-    {
-      id: 3,
-      title: "Satellite Imagery for Crop Yield Prediction",
-      category: "AI & DATA",
-      icon: Map,
-      color: "bg-purple-500",
-      iconColor: "text-purple-600",
-      bgLight: "bg-purple-50/50",
-      description: "A new startup partners with ISRO to provide high-resolution multispectral imagery to smallholder farmers for early disease detection.",
-      date: "May 21, 2026",
-      details: {
-        cost: "₹150 per acre per crop season (delivered via regional FPO wholesale bundles)",
-        vendors: ["SatSure", "Cropin AI Engine", "Bhuvan ISRO Portal"],
-        caseStudy: "Early yellow rust detection in wheat crops across Gurdaspur prevented massive spread, saving an estimated ₹1.8 Lakhs in potential damage.",
-        roi: "Cost-benefit ratio of 1:9 through early pesticide application avoidance.",
-        specs: "3-meter spatial resolution, 5-day revisit cycle, AI leaf index anomaly warnings."
-      }
     }
-  ];
+  ]);
+
+  const handleCreateReport = async (e) => {
+    e.preventDefault();
+    const queryText = techInput.trim();
+    if (!queryText) {
+      setErrorMsg("Please enter a technology concept.");
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg("");
+
+    const prompt = `You are a senior agricultural technology advisor and evaluator. Provide a detailed feasibility evaluation report for: "${queryText}".
+    
+    Structure your response as a valid JSON object. Do not include markdown tags (like \`\`\`json). Return ONLY the raw JSON string.
+    The JSON object must have exactly these keys:
+    1. "title": A professional report title.
+    2. "category": Technological category (e.g. "AUTOMATION", "AI & DATA", "SENSORS & IOT", "BIOTECH").
+    3. "description": A concise summary of the technology and its target impact in India (25-35 words).
+    4. "details": A sub-object containing:
+       - "cost": Approximate cost estimate in Indian Rupees and state/central subsidy availability.
+       - "vendors": An array of 3 realistic vendors/manufacturers in India.
+       - "caseStudy": Brief trial results or case study in a major agricultural district.
+       - "roi": Estimated return on investment timeline or yield premium percentage.
+       - "specs": Core technical specifications (battery, payload, capacity, sensor accuracy, etc.).`;
+
+    try {
+      const response = await generateContent(prompt, {
+        system_instruction: "You are an expert agritech evaluator. Always return response as raw JSON.",
+        temperature: 0.2
+      });
+
+      let cleanJson = response.trim();
+      if (cleanJson.startsWith("```")) {
+        cleanJson = cleanJson.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+      }
+
+      const parsed = JSON.parse(cleanJson);
+
+      const newReport = {
+        id: Date.now(),
+        date: "Today",
+        icon: Cpu,
+        color: "bg-purple-500",
+        iconColor: "text-purple-650",
+        bgLight: "bg-purple-50/50",
+        ...parsed
+      };
+
+      setTrends((prev) => [newReport, ...prev]);
+      setSelectedReport(newReport);
+      setTechInput("");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Could not formulate agritech report. Using fallback offline compiler.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fadeIn antialiased">
-      
       {/* Page Header */}
       <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between">
         <div className="flex items-start space-x-4 z-10">
@@ -84,10 +130,49 @@ export default function AgriTechTrends() {
           <div>
             <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">AgriTech Innovations</h1>
             <p className="text-sm text-slate-500 mt-1">
-              Latest technological advancements transforming Indian agriculture
+              Latest technological advancements transforming Indian agriculture (AI Powered)
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Dynamic Technology Evaluator Form */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs space-y-4">
+        <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+          <Sparkles className="h-4 w-4 text-[#31572c]" /> AI Technology Evaluator
+        </h3>
+        <form onSubmit={handleCreateReport} className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            value={techInput}
+            onChange={(e) => setTechInput(e.target.value)}
+            placeholder="e.g. Vertical farming towers, IoT automated solar pumps, Blockchain trace..."
+            className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-[#31572c]/20 focus:border-[#31572c] outline-none"
+            required
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-[#31572c] hover:bg-[#1a3018] text-white py-3 px-5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-xs shadow-xs shrink-0 disabled:opacity-60"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Compiling Report...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" /> Evaluate Tech
+              </>
+            )}
+          </button>
+        </form>
+
+        {errorMsg && (
+          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex items-center gap-2 text-xs font-bold">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
       </div>
 
       {/* Grid Layout (exactly 3 columns on tablet/desktop) */}
@@ -109,7 +194,7 @@ export default function AgriTechTrends() {
                   </span>
                 </div>
                 
-                <h3 className="text-base font-extrabold text-slate-900 group-hover:text-emerald-800 transition-colors mb-3 leading-snug">
+                <h3 className="text-base font-extrabold text-slate-900 group-hover:text-[#31572c] transition-colors mb-3 leading-snug">
                   {trend.title}
                 </h3>
                 
@@ -139,11 +224,9 @@ export default function AgriTechTrends() {
       {/* Detailed Technical Report Slide-out Panel */}
       {selectedReport && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-end z-50 animate-fadeIn">
-          {/* Overlay Click Close */}
           <div className="absolute inset-0" onClick={() => setSelectedReport(null)} />
           
           <div className="bg-white h-full max-w-xl w-full border-l border-slate-100 shadow-2xl relative z-10 flex flex-col justify-between p-6 sm:p-8 animate-slideOver">
-            
             <div>
               {/* Close Button */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
@@ -173,7 +256,7 @@ export default function AgriTechTrends() {
                     <DollarSign className="w-4 h-4 text-emerald-700" />
                     <span>Implementation Costing</span>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
                     {selectedReport.details.cost}
                   </p>
                 </div>
@@ -202,7 +285,7 @@ export default function AgriTechTrends() {
                     <Compass className="w-4 h-4 text-purple-700" />
                     <span>Regional Case Study / Trials</span>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
                     {selectedReport.details.caseStudy}
                   </p>
                 </div>
@@ -213,7 +296,7 @@ export default function AgriTechTrends() {
                     <ShieldCheck className="w-4 h-4 text-teal-700" />
                     <span>Yield ROI Forecast</span>
                   </div>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                  <p className="text-xs sm:text-sm text-slate-650 leading-relaxed font-semibold">
                     {selectedReport.details.roi}
                   </p>
                 </div>
@@ -241,11 +324,9 @@ export default function AgriTechTrends() {
                 Close Report
               </button>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }
