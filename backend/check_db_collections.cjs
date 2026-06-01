@@ -11,6 +11,8 @@ async function checkDb() {
     const db = mongoose.connection.db;
     const collections = await db.listCollections().toArray();
     
+
+    
     console.log('\n--- Collections ---');
     for (const c of collections) {
       console.log(c.name);
